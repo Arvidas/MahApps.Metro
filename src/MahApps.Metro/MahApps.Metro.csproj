@@ -7,7 +7,6 @@
         <RootNamespace>MahApps.Metro</RootNamespace>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <DefineConstants>$(DefineConstants);INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
-        <Platforms>AnyCPU;x64</Platforms>
     </PropertyGroup>
 
     <!-- SourceLink -->
