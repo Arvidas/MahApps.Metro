@@ -5,6 +5,7 @@
 using System.Configuration;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Media;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.WindowsAndMessaging;
@@ -22,23 +23,30 @@ namespace MahApps.Metro.Controls
         {
             return new WINDOWPLACEMENT
                    {
-                        length = (uint)Marshal.SizeOf<WINDOWPLACEMENT>(),
-                        showCmd = (SHOW_WINDOW_CMD)this.showCmd,
-                        ptMinPosition = new System.Drawing.Point { X = (int)this.minPosition.X, Y = (int)this.minPosition.Y },
-                        ptMaxPosition = new System.Drawing.Point { X = (int)this.maxPosition.X, Y = (int)this.maxPosition.Y },
-                        rcNormalPosition = new RECT { left = (int)this.normalPosition.X, top = (int)this.normalPosition.Y, right = (int)this.normalPosition.Right, bottom = (int)this.normalPosition.Bottom }
+                       length = (uint)Marshal.SizeOf<WINDOWPLACEMENT>(),
+                       showCmd = (SHOW_WINDOW_CMD)this.showCmd,
+                       ptMinPosition = new System.Drawing.Point { X = (int)this.minPosition.X, Y = (int)this.minPosition.Y },
+                       ptMaxPosition = new System.Drawing.Point { X = (int)this.maxPosition.X, Y = (int)this.maxPosition.Y },
+                       rcNormalPosition = new RECT { left = (int)this.normalPosition.X, top = (int)this.normalPosition.Y, right = (int)this.normalPosition.Right, bottom = (int)this.normalPosition.Bottom }
                    };
         }
 
-        internal static WindowPlacementSetting FromWINDOWPLACEMENT(WINDOWPLACEMENT windowplacement)
+        internal static WindowPlacementSetting FromWINDOWPLACEMENT(Window window, WINDOWPLACEMENT placement)
         {
+            // Get the current DPI scale factor
+            var dpiScale = VisualTreeHelper.GetDpi(window);
+
+            // Adjust the size of the window for DPI scaling
+            var adjustedWidth = placement.rcNormalPosition.GetWidth() / dpiScale.DpiScaleX;
+            var adjustedHeight = placement.rcNormalPosition.GetHeight() / dpiScale.DpiScaleY;
+
             return new WindowPlacementSetting
-                    {
-                        showCmd = (uint)windowplacement.showCmd,
-                        minPosition = new Point(windowplacement.ptMinPosition.X, windowplacement.ptMinPosition.Y),
-                        maxPosition = new Point(windowplacement.ptMaxPosition.X, windowplacement.ptMaxPosition.Y),
-                        normalPosition = new Rect(windowplacement.rcNormalPosition.left, windowplacement.rcNormalPosition.top, windowplacement.rcNormalPosition.GetWidth(), windowplacement.rcNormalPosition.GetHeight()),
-                    };
+                   {
+                       showCmd = (uint)placement.showCmd,
+                       minPosition = new Point(placement.ptMinPosition.X, placement.ptMinPosition.Y),
+                       maxPosition = new Point(placement.ptMaxPosition.X, placement.ptMaxPosition.Y),
+                       normalPosition = new Rect(placement.rcNormalPosition.left, placement.rcNormalPosition.top, adjustedWidth, adjustedHeight),
+                   };
         }
     }
 
@@ -65,6 +73,12 @@ namespace MahApps.Metro.Controls
         /// Stores the current values of the settings properties.
         /// </summary>
         void Save();
+
+        /// <summary>
+        /// Calls Reset on the providers.
+        /// Providers must implement IApplicationSettingsProvider to support this.
+        /// </summary>
+        void Reset();
     }
 
     /// <summary>

@@ -1,9 +1,10 @@
-[![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner2-direct.svg)](https://vshymanskyy.github.io/StandWithUkraine)
+<!-- [![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner2-direct.svg)](https://vshymanskyy.github.io/StandWithUkraine) -->
 
 <div align="center">
   <br />
   <a href="https://github.com/MahApps/MahApps.Metro">
-    <img alt="MahApps.Metro" width="200" heigth="200" src="./docs/logo_ukraine.png">
+    <!-- <img alt="MahApps.Metro" width="200" heigth="200" src="./docs/logo_ukraine.png"> -->
+    <img alt="MahApps.Metro" width="200" heigth="200" src="./mahapps.metro.logo.png">
   </a>
   <h1>MahApps.Metro</h1>
   <p>
@@ -67,7 +68,7 @@
 
 [![Follow @punker76](https://img.shields.io/badge/Twitter-Follow%20%40punker76-blue.svg?style=flat-square)](https://twitter.com/intent/follow?screen_name=punker76)
 
-[![Join the chat at https://gitter.im/MahApps/MahApps.Metro](https://img.shields.io/badge/Gitter-Join%20Chat-green.svg?style=flat-square)](https://gitter.im/MahApps/MahApps.Metro)
+[![Join the chat at https://gitter.im/MahApps/MahApps.Metro](https://img.shields.io/badge/Gitter-Join%20Chat-green.svg?style=flat-square)](https://matrix.to/#/#MahApps_MahApps.Metro:gitter.im)
 
 ## License
 

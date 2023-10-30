@@ -46,6 +46,7 @@ namespace MahApps.Metro.Controls
     [TemplatePart(Name = PART_OverlayBox, Type = typeof(Grid))]
     [TemplatePart(Name = PART_MetroActiveDialogContainer, Type = typeof(Grid))]
     [TemplatePart(Name = PART_MetroInactiveDialogsContainer, Type = typeof(Grid))]
+    [TemplatePart(Name = PART_Flyouts, Type = typeof(UIElement))]
     [TemplatePart(Name = PART_FlyoutModal, Type = typeof(Rectangle))]
     [TemplatePart(Name = PART_Content, Type = typeof(MetroContentControl))]
     public class MetroWindow : WindowChromeWindow
@@ -61,24 +62,26 @@ namespace MahApps.Metro.Controls
         private const string PART_OverlayBox = "PART_OverlayBox";
         private const string PART_MetroActiveDialogContainer = "PART_MetroActiveDialogContainer";
         private const string PART_MetroInactiveDialogsContainer = "PART_MetroInactiveDialogsContainer";
+        private const string PART_Flyouts = "PART_Flyouts";
         private const string PART_FlyoutModal = "PART_FlyoutModal";
         private const string PART_Content = "PART_Content";
 
-        FrameworkElement? icon;
-        UIElement? titleBar;
-        UIElement? titleBarBackground;
-        Thumb? windowTitleThumb;
-        Thumb? flyoutModalDragMoveThumb;
+        private FrameworkElement? icon;
+        private UIElement? titleBar;
+        private UIElement? titleBarBackground;
+        private Thumb? windowTitleThumb;
+        private Thumb? flyoutModalDragMoveThumb;
         private IInputElement? restoreFocus;
-        internal ContentPresenter? LeftWindowCommandsPresenter;
-        internal ContentPresenter? RightWindowCommandsPresenter;
-        internal ContentPresenter? WindowButtonCommandsPresenter;
+        private ContentPresenter? LeftWindowCommandsPresenter;
+        private ContentPresenter? RightWindowCommandsPresenter;
+        private ContentPresenter? WindowButtonCommandsPresenter;
 
         internal Grid? overlayBox;
         internal Grid? metroActiveDialogContainer;
         internal Grid? metroInactiveDialogContainer;
         private Storyboard? overlayStoryboard;
-        Rectangle? flyoutModal;
+        private UIElement? flyouts;
+        private Rectangle? flyoutModal;
 
         private EventHandler? onOverlayFadeInStoryboardCompleted = null;
         private EventHandler? onOverlayFadeOutStoryboardCompleted = null;
@@ -161,14 +164,7 @@ namespace MahApps.Metro.Controls
             = DependencyProperty.Register(nameof(ShowTitleBar),
                                           typeof(bool),
                                           typeof(MetroWindow),
-                                          new PropertyMetadata(BooleanBoxes.TrueBox, OnShowTitleBarPropertyChangedCallback, OnShowTitleBarCoerceValueCallback));
-
-        [MustUseReturnValue]
-        private static object? OnShowTitleBarCoerceValueCallback(DependencyObject d, object? value)
-        {
-            // if UseNoneWindowStyle = true no title bar should be shown
-            return ((MetroWindow)d).UseNoneWindowStyle ? false : value;
-        }
+                                          new PropertyMetadata(BooleanBoxes.TrueBox, OnShowTitleBarPropertyChangedCallback));
 
         /// <summary>
         /// Gets or sets whether the TitleBar is visible or not.
@@ -193,6 +189,39 @@ namespace MahApps.Metro.Controls
         {
             get => (bool)this.GetValue(ShowDialogsOverTitleBarProperty);
             set => this.SetValue(ShowDialogsOverTitleBarProperty, BooleanBoxes.Box(value));
+        }
+
+        /// <summary>Identifies the <see cref="ShowFlyoutsOverDialogs"/> dependency property.</summary>
+        public static readonly DependencyProperty ShowFlyoutsOverDialogsProperty
+            = DependencyProperty.Register(nameof(ShowFlyoutsOverDialogs),
+                                          typeof(bool),
+                                          typeof(MetroWindow),
+                                          new FrameworkPropertyMetadata(BooleanBoxes.FalseBox, FrameworkPropertyMetadataOptions.AffectsArrange | FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender, null, CoerceValueShowFlyoutsOverDialogs));
+
+        [MustUseReturnValue]
+        private static object? CoerceValueShowFlyoutsOverDialogs(DependencyObject d, object? baseValue)
+        {
+            if (d is MetroWindow window && window.Flyouts != null)
+            {
+                // It's not allowed to change this if any Flyout is open
+                // TODO Find a way to reset the zIndex of any open Flyout if <see cref="ShowFlyoutsOverDialogs"/> is changed by the user 
+                var anyFlyoutOpen = window.Flyouts.GetFlyouts().Any(f => f.IsOpen);
+                if (anyFlyoutOpen)
+                {
+                    return false;
+                }
+            }
+
+            return baseValue;
+        }
+
+        /// <summary>
+        /// Get or sets whether a Flyout will be shown over Dialogs.
+        /// </summary>
+        public bool ShowFlyoutsOverDialogs
+        {
+            get => (bool)this.GetValue(ShowFlyoutsOverDialogsProperty);
+            set => this.SetValue(ShowFlyoutsOverDialogsProperty, BooleanBoxes.Box(value));
         }
 
         /// <summary>Identifies the <see cref="IsAnyDialogOpen"/> dependency property.</summary>
@@ -803,32 +832,6 @@ namespace MahApps.Metro.Controls
             set => this.SetValue(IconOverlayBehaviorProperty, value);
         }
 
-        /// <summary>Identifies the <see cref="UseNoneWindowStyle"/> dependency property.</summary>
-        public static readonly DependencyProperty UseNoneWindowStyleProperty
-            = DependencyProperty.Register(nameof(UseNoneWindowStyle),
-                                          typeof(bool),
-                                          typeof(MetroWindow),
-                                          new PropertyMetadata(BooleanBoxes.FalseBox, OnUseNoneWindowStylePropertyChangedCallback));
-
-        private static void OnUseNoneWindowStylePropertyChangedCallback(DependencyObject d, DependencyPropertyChangedEventArgs e)
-        {
-            if (e.NewValue != e.OldValue)
-            {
-                // if UseNoneWindowStyle = true no title bar should be shown
-                // UseNoneWindowStyle means no title bar, window commands or min, max, close buttons
-                ((MetroWindow)d).CoerceValue(ShowTitleBarProperty);
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets whether the window will force WindowStyle to None.
-        /// </summary>
-        public bool UseNoneWindowStyle
-        {
-            get => (bool)this.GetValue(UseNoneWindowStyleProperty);
-            set => this.SetValue(UseNoneWindowStyleProperty, BooleanBoxes.Box(value));
-        }
-
         /// <summary>Identifies the <see cref="OverrideDefaultWindowCommandsBrush"/> dependency property.</summary>
         public static readonly DependencyProperty OverrideDefaultWindowCommandsBrushProperty
             = DependencyProperty.Register(nameof(OverrideDefaultWindowCommandsBrush),
@@ -897,7 +900,7 @@ namespace MahApps.Metro.Controls
         private void UpdateIconVisibility()
         {
             var isVisible = (this.Icon is not null || this.IconTemplate is not null)
-                && ((this.IconOverlayBehavior.HasFlag(OverlayBehavior.HiddenTitleBar) && !this.ShowTitleBar) || (this.ShowIconOnTitleBar && this.ShowTitleBar));
+                            && ((this.IconOverlayBehavior.HasFlag(OverlayBehavior.HiddenTitleBar) && !this.ShowTitleBar) || (this.ShowIconOnTitleBar && this.ShowTitleBar));
             this.icon?.SetCurrentValue(VisibilityProperty, isVisible ? Visibility.Visible : Visibility.Collapsed);
         }
 
@@ -905,15 +908,15 @@ namespace MahApps.Metro.Controls
         {
             this.UpdateIconVisibility();
 
-            var newVisibility = this.TitleBarHeight > 0 && this.ShowTitleBar && !this.UseNoneWindowStyle ? Visibility.Visible : Visibility.Collapsed;
+            var newVisibility = this.TitleBarHeight > 0 && this.ShowTitleBar ? Visibility.Visible : Visibility.Collapsed;
 
             this.titleBar?.SetCurrentValue(VisibilityProperty, newVisibility);
             this.titleBarBackground?.SetCurrentValue(VisibilityProperty, newVisibility);
 
-            var leftWindowCommandsVisibility = this.LeftWindowCommandsOverlayBehavior.HasFlag(WindowCommandsOverlayBehavior.HiddenTitleBar) && !this.UseNoneWindowStyle ? Visibility.Visible : newVisibility;
+            var leftWindowCommandsVisibility = this.LeftWindowCommandsOverlayBehavior.HasFlag(WindowCommandsOverlayBehavior.HiddenTitleBar) ? Visibility.Visible : newVisibility;
             this.LeftWindowCommandsPresenter?.SetCurrentValue(VisibilityProperty, leftWindowCommandsVisibility);
 
-            var rightWindowCommandsVisibility = this.RightWindowCommandsOverlayBehavior.HasFlag(WindowCommandsOverlayBehavior.HiddenTitleBar) && !this.UseNoneWindowStyle ? Visibility.Visible : newVisibility;
+            var rightWindowCommandsVisibility = this.RightWindowCommandsOverlayBehavior.HasFlag(WindowCommandsOverlayBehavior.HiddenTitleBar) ? Visibility.Visible : newVisibility;
             this.RightWindowCommandsPresenter?.SetCurrentValue(VisibilityProperty, rightWindowCommandsVisibility);
 
             var windowButtonCommandsVisibility = this.WindowButtonCommandsOverlayBehavior.HasFlag(OverlayBehavior.HiddenTitleBar) ? Visibility.Visible : newVisibility;
@@ -1147,8 +1150,6 @@ namespace MahApps.Metro.Controls
         {
             this.SetCurrentValue(MetroDialogOptionsProperty, new MetroDialogSettings());
 
-            this.InitializeSettingsBehavior();
-
             this.DataContextChanged += this.MetroWindow_DataContextChanged;
             this.Loaded += this.MetroWindow_Loaded;
         }
@@ -1163,8 +1164,10 @@ namespace MahApps.Metro.Controls
             this.Unloaded += (_, _) => ThemeManager.Current.ThemeChanged -= this.HandleThemeManagerThemeChanged;
         }
 
-        private void InitializeSettingsBehavior()
+        protected override void InitializeBehaviors()
         {
+            base.InitializeBehaviors();
+
             Interaction.GetBehaviors(this).Add(new WindowsSettingBehavior());
         }
 
@@ -1239,12 +1242,12 @@ namespace MahApps.Metro.Controls
             {
                 this.titleBar.SetCurrentValue(MarginProperty, default(Thickness));
                 Grid.SetColumn(this.titleBar, 0);
-                Grid.SetColumnSpan(this.titleBar, 5);
+                Grid.SetColumnSpan(this.titleBar, 3);
             }
             else
             {
                 this.titleBar.SetCurrentValue(MarginProperty, new Thickness(leftWindowCommandsWidth, 0, rightWindowCommandsWidth, 0));
-                Grid.SetColumn(this.titleBar, 2);
+                Grid.SetColumn(this.titleBar, 1);
                 Grid.SetColumnSpan(this.titleBar, 1);
             }
         }
@@ -1406,6 +1409,7 @@ namespace MahApps.Metro.Controls
             this.overlayBox = this.GetTemplateChild(PART_OverlayBox) as Grid;
             this.metroActiveDialogContainer = this.GetTemplateChild(PART_MetroActiveDialogContainer) as Grid;
             this.metroInactiveDialogContainer = this.GetTemplateChild(PART_MetroInactiveDialogsContainer) as Grid;
+            this.flyouts = this.GetTemplateChild(PART_Flyouts) as UIElement;
             this.flyoutModal = this.GetTemplateChild(PART_FlyoutModal) as Rectangle;
 
             if (this.flyoutModal is not null)
@@ -1660,7 +1664,7 @@ namespace MahApps.Metro.Controls
             {
                 // show menu only if mouse pos is on title bar or if we have a window with none style and no title bar
                 var mousePos = e.GetPosition(window);
-                if ((mousePos.Y <= window.TitleBarHeight && window.TitleBarHeight > 0) || (window.UseNoneWindowStyle && window.TitleBarHeight <= 0))
+                if ((mousePos.Y <= window.TitleBarHeight && window.TitleBarHeight > 0) || (window.WindowStyle == WindowStyle.None && window.TitleBarHeight <= 0))
                 {
 #pragma warning disable 618
                     ControlzEx.SystemCommands.ShowSystemMenuPhysicalCoordinates(window, window.PointToScreen(mousePos));
@@ -1682,14 +1686,16 @@ namespace MahApps.Metro.Controls
 
         internal void HandleFlyoutStatusChange(Flyout flyout, IList<Flyout> visibleFlyouts)
         {
+            var zIndexOfFlyoutsControl = this.flyouts != null ? Panel.GetZIndex(this.flyouts) : 2;
+
             // Checks a recently opened Flyout's position.
-            var zIndex = flyout.IsOpen ? Panel.GetZIndex(flyout) + 3 : visibleFlyouts.Count() + 2;
+            var zIndex = flyout.IsOpen ? Panel.GetZIndex(flyout) + zIndexOfFlyoutsControl + 1 : visibleFlyouts.Count + zIndexOfFlyoutsControl;
 
             //if the the corresponding behavior has the right flag, set the window commands' and icon zIndex to a number that is higher than the Flyout's.
             this.icon?.SetValue(Panel.ZIndexProperty, flyout.IsModal && flyout.IsOpen ? 0 : (this.IconOverlayBehavior.HasFlag(OverlayBehavior.Flyouts) ? zIndex : 1));
-            this.LeftWindowCommandsPresenter?.SetValue(Panel.ZIndexProperty, flyout.IsModal && flyout.IsOpen ? 0 : 1);
-            this.RightWindowCommandsPresenter?.SetValue(Panel.ZIndexProperty, flyout.IsModal && flyout.IsOpen ? 0 : 1);
-            this.WindowButtonCommandsPresenter?.SetValue(Panel.ZIndexProperty, flyout.IsModal && flyout.IsOpen ? 0 : (this.WindowButtonCommandsOverlayBehavior.HasFlag(OverlayBehavior.Flyouts) ? zIndex : 1));
+            this.LeftWindowCommandsPresenter?.SetValue(Panel.ZIndexProperty, flyout is { IsModal: true, IsOpen: true } ? 0 : 1);
+            this.RightWindowCommandsPresenter?.SetValue(Panel.ZIndexProperty, flyout is { IsModal: true, IsOpen: true } ? 0 : 1);
+            this.WindowButtonCommandsPresenter?.SetValue(Panel.ZIndexProperty, flyout is { IsModal: true, IsOpen: true } ? 0 : (this.WindowButtonCommandsOverlayBehavior.HasFlag(OverlayBehavior.Flyouts) ? zIndex : 1));
 
             this.HandleWindowCommandsForFlyouts(visibleFlyouts);
 

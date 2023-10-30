@@ -49,13 +49,14 @@ namespace MetroDemo
                 {
                     window.SetCurrentValue(IgnoreTaskbarOnMaximizeProperty, true);
                     window.SetCurrentValue(WindowStateProperty, WindowState.Maximized);
-                    window.SetCurrentValue(UseNoneWindowStyleProperty, true);
+                    window.SetCurrentValue(WindowStyleProperty, WindowStyle.None);
+                    window.SetCurrentValue(ShowTitleBarProperty, false);
                 }
                 else
                 {
                     window.SetCurrentValue(WindowStateProperty, WindowState.Normal);
-                    window.SetCurrentValue(UseNoneWindowStyleProperty, false);
-                    window.SetCurrentValue(ShowTitleBarProperty, true); // <-- this must be set to true
+                    window.SetCurrentValue(WindowStyleProperty, WindowStyle.SingleBorderWindow);
+                    window.SetCurrentValue(ShowTitleBarProperty, true);
                     window.SetCurrentValue(IgnoreTaskbarOnMaximizeProperty, false);
                 }
             }
@@ -427,7 +428,7 @@ namespace MetroDemo
 
         private void ShowInputDialogOutside(object sender, RoutedEventArgs e)
         {
-            var result = this.ShowModalInputExternal("Hello!", "What is your name?");
+            var result = this.ShowModalInputExternal("Hello!", "What is your name?", new MetroDialogSettings(this.MetroDialogOptions) { AnimateShow = false });
 
             if (result == null) //user pressed cancel
             {
@@ -470,16 +471,6 @@ namespace MetroDemo
                                                   : settings.NegativeButtonText +
                                                     Environment.NewLine + Environment.NewLine + "This dialog will follow the Use Accent setting."));
             }
-        }
-
-        private async void ShowDialogOutside(object sender, RoutedEventArgs e)
-        {
-            var dialog = new CustomDialog(this.MetroDialogOptions) { Content = this.Resources["CustomDialogTest"], Title = "This dialog allows arbitrary content." };
-            dialog = dialog.ShowDialogExternally();
-
-            await Task.Delay(5000);
-
-            await dialog.RequestCloseAsync();
         }
 
         #endregion
@@ -557,57 +548,57 @@ namespace MetroDemo
 
         private MetroWindow GetTestWindow()
         {
-            if (this.testWindow != null)
-            {
-                this.testWindow.Close();
-            }
+            this.testWindow?.Close();
 
             this.testWindow = new MetroWindow
                               {
                                   Owner = this,
                                   WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                                  Title = "Another Test...",
+                                  Title = "A Window Test...",
                                   Width = 500,
-                                  Height = 300
+                                  Height = 300,
+                                  ResizeMode = ResizeMode.CanResizeWithGrip
                               };
-            this.testWindow.Closed += (o, args) => this.testWindow = null;
+            this.testWindow.Closed += (_, _) => this.testWindow = null;
             return this.testWindow;
-        }
-
-        private void MenuWindowWithoutBorderOnClick(object sender, RoutedEventArgs e)
-        {
-            var w = this.GetTestWindow();
-            w.Content = new TextBlock { Text = "MetroWindow without Border", FontSize = 28, FontWeight = FontWeights.Light, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
-            w.BorderThickness = new Thickness(0);
-            w.Show();
         }
 
         private void MenuWindowWithBorderOnClick(object sender, RoutedEventArgs e)
         {
             var w = this.GetTestWindow();
             w.Content = new TextBlock { Text = "MetroWindow with Border", FontSize = 28, FontWeight = FontWeights.Light, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
+            w.BorderThickness = new Thickness(1);
+            w.Show();
+        }
+
+        private void MenuWindowWithRoundedBorderOnClick(object sender, RoutedEventArgs e)
+        {
+            var w = this.GetTestWindow();
+            w.Content = new TextBlock { Text = "MetroWindow with rounded Border", FontSize = 28, FontWeight = FontWeights.Light, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
             w.GlowColor = null;
             w.NonActiveGlowColor = null;
+            w.BorderThickness = new Thickness(1);
+            w.WindowStyle = WindowStyle.None;
+            w.AllowsTransparency = true;
+            ControlsHelper.SetCornerRadius(w, new CornerRadius(8));
             w.Show();
         }
 
         private void MenuWindowWithGlowOnClick(object sender, RoutedEventArgs e)
         {
             var w = this.GetTestWindow();
-            w.Content = new Button { Content = "MetroWindow with Glow", ToolTip = "And test tool tip", FontSize = 28, FontWeight = FontWeights.Light, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
-            w.BorderThickness = new Thickness(1);
-            w.BorderBrush = null;
-            w.SetResourceReference(GlowColorProperty, "MahApps.Colors.Accent");
+            w.Content = new Button { Content = "MetroWindow with Glow", ToolTip = "This is a tool tip", FontSize = 28, FontWeight = FontWeights.Light, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
             w.Show();
         }
 
-        private void MenuWindowWithShadowOnClick(object sender, RoutedEventArgs e)
+        private void MenuWindowWithoutGlowOnClick(object sender, RoutedEventArgs e)
         {
             var w = this.GetTestWindow();
-            w.Content = new TextBlock { Text = "Window with drop shadow", FontSize = 28, FontWeight = FontWeights.Light, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
-            w.BorderThickness = new Thickness(0);
-            w.BorderBrush = null;
-            w.GlowColor = Colors.Black;
+            w.Content = new TextBlock { Text = "MetroWindow without Glow", FontSize = 28, FontWeight = FontWeights.Light, VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
+            w.GlowColor = null;
+            w.NonActiveGlowColor = null;
+            w.BorderThickness = new Thickness(1);
+            w.WindowStyle = WindowStyle.None;
             w.Show();
         }
     }

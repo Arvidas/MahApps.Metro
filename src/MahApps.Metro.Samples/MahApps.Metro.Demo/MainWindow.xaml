@@ -209,7 +209,6 @@
                 <MenuItem Click="ShowInputDialogOutside" Header="Show ShowInputDialog Externally" />
                 <MenuItem Click="ShowLoginDialogOutside" Header="Show ShowLoginDialog Externally" />
                 <MenuItem Click="ShowMessageDialogOutside" Header="Show ShowMessageDialog Externally" />
-                <MenuItem Click="ShowDialogOutside" Header="Show CustomDialog Externally" />
                 <Separator />
                 <MenuItem Command="{Binding ShowInputDialogCommand}" Header="Show InputDialog via VM" />
                 <MenuItem Command="{Binding ShowLoginDialogCommand}" Header="Show LoginDialog via VM ..." />
@@ -252,9 +251,6 @@
                 <MenuItem Header="ShowTitleBar"
                           IsCheckable="True"
                           IsChecked="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type mah:MetroWindow}}, Path=ShowTitleBar}" />
-                <MenuItem Header="UseNoneWindowStyle"
-                          IsCheckable="True"
-                          IsChecked="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type mah:MetroWindow}}, Path=UseNoneWindowStyle}" />
                 <MenuItem Header="ShowInTaskbar"
                           IsCheckable="True"
                           IsChecked="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type mah:MetroWindow}}, Path=ShowInTaskbar}" />
@@ -268,10 +264,10 @@
                           IsCheckable="True"
                           IsChecked="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type mah:MetroWindow}}, Path=ToggleFullScreen}" />
                 <Separator />
-                <MenuItem Click="MenuWindowWithoutBorderOnClick" Header="Window without Border" />
-                <MenuItem Click="MenuWindowWithBorderOnClick" Header="Window with Border" />
                 <MenuItem Click="MenuWindowWithGlowOnClick" Header="Window with Glow" />
-                <MenuItem Click="MenuWindowWithShadowOnClick" Header="Window with drop shadow" />
+                <MenuItem Click="MenuWindowWithoutGlowOnClick" Header="Window without Glow" />
+                <MenuItem Click="MenuWindowWithBorderOnClick" Header="Window with Border (and Glow)" />
+                <MenuItem Click="MenuWindowWithRoundedBorderOnClick" Header="Window with rounded Border (without Glow)" />
                 <MenuItem Click="LaunchSizeToContentDemo" Header="Window with SizeToContent" />
                 <Separator />
                 <MenuItem x:Name="ShowSeparatorsMI"

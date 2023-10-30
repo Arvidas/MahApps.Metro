@@ -4,41 +4,30 @@
     <PropertyGroup>
         <AssemblyName>MahApps.Metro.Caliburn.Demo</AssemblyName>
         <RootNamespace>Caliburn.Metro.Demo</RootNamespace>
-        <DisableFody Condition=" '$(Configuration)' == 'Debug' ">true</DisableFody>
         <!-- Workaround for https://github.com/dotnet/sourcelink/issues/91 -->
         <DeterministicSourcePaths Condition="'$(EnableSourceLink)' == ''">false</DeterministicSourcePaths>
-    </PropertyGroup>
-
-    <PropertyGroup>
         <OutputType>WinExe</OutputType>
         <NoWarn>SA1652</NoWarn>
         <ApplicationIcon>mahapps.metro.logo2.ico</ApplicationIcon>
-        <!-- <ApplicationManifest>app.manifest</ApplicationManifest> -->
-        <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+        <ApplicationManifest>app.manifest</ApplicationManifest>
     </PropertyGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\..\MahApps.Metro\MahApps.Metro.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+        <None Include="app.manifest" />
+    </ItemGroup>
+
     <ItemGroup Condition="$(DefineConstants.Contains(NETCOREAPP)) == false">
         <Reference Include="System.ComponentModel.DataAnnotations" />
     </ItemGroup>
 
-    <ItemGroup Condition="$(DefineConstants.Contains(NETCOREAPP)) == false">
-        <PackageReference Include="Fody" Version="6.6.0">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="Costura.Fody" Version="5.7.0">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; compile; native; contentfiles; analyzers</IncludeAssets>
-        </PackageReference>
-    </ItemGroup>
-
     <ItemGroup>
-        <PackageReference Include="MahApps.Metro.IconPacks.Modern" Version="4.11.0" />
-        <PackageReference Include="Caliburn.Micro" Version="4.0.173" />
+        <PackageReference Include="MahApps.Metro.IconPacks.Modern" />
+        <PackageReference Include="Caliburn.Micro" />
+        <PackageReference Include="System.ComponentModel.Composition" />
     </ItemGroup>
 
     <ItemGroup>

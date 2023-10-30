@@ -22,14 +22,13 @@ namespace MahApps.Metro.Converters
             if (values != null && parameter is ResizeModeButtonType whichButton)
             {
                 var showButton = (values.ElementAtOrDefault(0) as bool?).GetValueOrDefault(true);
-                var useNoneWindowStyle = (values.ElementAtOrDefault(1) as bool?).GetValueOrDefault(false);
 
                 if (whichButton == ResizeModeButtonType.Close)
                 {
-                    return useNoneWindowStyle || !showButton ? Visibility.Collapsed : Visibility.Visible;
+                    return !showButton ? Visibility.Collapsed : Visibility.Visible;
                 }
 
-                var windowResizeMode = (values.ElementAtOrDefault(2) as ResizeMode?).GetValueOrDefault(ResizeMode.CanResize);
+                var windowResizeMode = (values.ElementAtOrDefault(1) as ResizeMode?).GetValueOrDefault(ResizeMode.CanResize);
 
                 switch (windowResizeMode)
                 {
@@ -38,14 +37,14 @@ namespace MahApps.Metro.Converters
                     case ResizeMode.CanMinimize:
                         if (whichButton == ResizeModeButtonType.Min)
                         {
-                            return useNoneWindowStyle || !showButton ? Visibility.Collapsed : Visibility.Visible;
+                            return !showButton ? Visibility.Collapsed : Visibility.Visible;
                         }
 
                         return Visibility.Collapsed;
                     case ResizeMode.CanResize:
                     case ResizeMode.CanResizeWithGrip:
                     default:
-                        return useNoneWindowStyle || !showButton ? Visibility.Collapsed : Visibility.Visible;
+                        return !showButton ? Visibility.Collapsed : Visibility.Visible;
                 }
             }
 
