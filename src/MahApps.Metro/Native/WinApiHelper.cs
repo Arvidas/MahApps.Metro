@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -15,7 +14,7 @@ using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 using Windows.Win32.UI.WindowsAndMessaging;
 
-namespace MahApps.Metro.Controls
+namespace MahApps.Metro.Native
 {
     internal static class WinApiHelper
     {
@@ -89,10 +88,13 @@ namespace MahApps.Metro.Controls
                 return;
             }
 
+            // Get the current DPI scale factor
+            var dpiScale = VisualTreeHelper.GetDpi(window);
+
             var x = CalcIntValue(wp?.rcNormalPosition.left, window.Left);
             var y = CalcIntValue(wp?.rcNormalPosition.top, window.Top);
-            var width = CalcIntValue(wp?.rcNormalPosition.GetWidth(), window.ActualWidth);
-            var height = CalcIntValue(wp?.rcNormalPosition.GetHeight(), window.ActualHeight);
+            var width = CalcIntValue(wp?.rcNormalPosition.GetWidth() * dpiScale.DpiScaleX, window.ActualWidth);
+            var height = CalcIntValue(wp?.rcNormalPosition.GetHeight() * dpiScale.DpiScaleY, window.ActualHeight);
 
             var placement = new WINDOWPLACEMENT
                             {
@@ -108,9 +110,20 @@ namespace MahApps.Metro.Controls
             }
 
             var hWnd = new WindowInteropHelper(window).EnsureHandle();
+
+            var placementBefore = new WINDOWPLACEMENT { length = (uint)Marshal.SizeOf<WINDOWPLACEMENT>() };
+            PInvoke.GetWindowPlacement((HWND)hWnd, &placementBefore);
+            if (placementBefore.showCmd is SHOW_WINDOW_CMD.SW_NORMAL or SHOW_WINDOW_CMD.SW_SHOWMAXIMIZED && placement.showCmd is SHOW_WINDOW_CMD.SW_SHOWMAXIMIZED)
+            {
+                if (PInvoke.MoveWindow((HWND)hWnd, placement.rcNormalPosition.X, placement.rcNormalPosition.Y, placement.rcNormalPosition.Width, placement.rcNormalPosition.Height, false) == false)
+                {
+                    Trace.TraceWarning($"{window}: The window can not moved! (MoveWindow) {placement}");
+                }
+            }
+
             if (PInvoke.SetWindowPlacement(new HWND(hWnd), &placement) == false)
             {
-                Trace.TraceWarning($"{window}: The window placement {wp} could not be (SetWindowPlacement)!");
+                Trace.TraceWarning($"{window}: The window placement {wp} could not be set (SetWindowPlacement) {placement}!");
             }
         }
 
@@ -128,67 +141,6 @@ namespace MahApps.Metro.Controls
             }
 
             return (int)fallback;
-        }
-
-        /// <summary> Gets the text associated with the given window handle. </summary>
-        /// <param name="window"> The window to act on. </param>
-        /// <returns> The window text. </returns>
-        internal static string? GetWindowText(this Window? window)
-        {
-            if (window is null == false
-                && PresentationSource.FromVisual(window) is HwndSource source
-                && source.IsDisposed == false
-                && source.RootVisual is null == false
-                && source.Handle != IntPtr.Zero)
-            {
-                int bufferSize = PInvoke.GetWindowTextLength(new HWND(source.Handle)) + 1;
-                unsafe
-                {
-                    fixed (char* windowNameChars = new char[bufferSize])
-                    {
-                        PInvoke.GetWindowText(new HWND(source.Handle), windowNameChars, bufferSize);
-                        return new string(windowNameChars);
-                    }
-                }
-            }
-
-            return default;
-        }
-
-        /// <summary> Gets the text associated with the given window handle. </summary>
-        /// <param name="window"> The window to act on. </param>
-        /// <returns> The window text. </returns>
-        internal static Rect GetWindowBoundingRectangle(this Window? window)
-        {
-            var bounds = new Rect(0, 0, 0, 0);
-
-            if (window is null == false
-                && PresentationSource.FromVisual(window) is HwndSource source
-                && source.IsDisposed == false
-                && source.RootVisual is null == false
-                && source.Handle != IntPtr.Zero)
-            {
-                var rc = new RECT();
-
-                try
-                {
-                    unsafe
-                    {
-                        PInvoke.GetWindowRect((HWND)source.Handle, &rc);
-                    }
-                }
-                // Allow empty catch statements.
-#pragma warning disable 56502
-                catch (Win32Exception)
-                {
-                }
-                // Disallow empty catch statements.
-#pragma warning restore 56502
-
-                bounds = new Rect(rc.left, rc.top, rc.GetWidth(), rc.GetHeight());
-            }
-
-            return bounds;
         }
     }
 }

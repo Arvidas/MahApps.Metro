@@ -2,12 +2,11 @@ GetKeyNameText
 GetMonitorInfo
 GetWindowPlacement
 GetWindowRect
-GetWindowText
-GetWindowTextLength
 LoadLibrary
 LoadString
 MapVirtualKey
 MonitorFromWindow
+MoveWindow
 ReleaseCapture
 SendMessage
 SetWindowPlacement

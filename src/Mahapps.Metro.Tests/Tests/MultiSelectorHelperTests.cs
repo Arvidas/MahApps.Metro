@@ -2,275 +2,298 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Threading.Tasks;
 using MahApps.Metro.Tests.TestHelpers;
-using Xunit;
+using MahApps.Metro.Tests.Views;
+using NUnit.Framework;
 
 namespace MahApps.Metro.Tests.Tests
 {
-    public class MultiSelectorHelperTests : AutomationTestFixtureBase<MultiSelectorHelperTestsFixture>
+    [TestFixture]
+    public class MultiSelectorHelperTests
     {
-        public MultiSelectorHelperTests(MultiSelectorHelperTestsFixture fixture)
-            : base(fixture)
+        private MultiSelectorHelperTestWindow? window;
+
+        [OneTimeSetUp]
+        public async Task OneTimeSetUp()
         {
+            this.window = await WindowHelpers.CreateInvisibleWindowAsync<MultiSelectorHelperTestWindow>().ConfigureAwait(false);
         }
 
-        [Fact]
-        [DisplayTestMethodName]
-        public async void SelectedItemsShouldBeSyncedByMultiSelectionHelper()
+        [OneTimeTearDown]
+        public void OneTimeTearDown()
         {
-            await this.fixture.PrepareForTestAsync();
-            await TestHost.SwitchToAppThread();
-
-            Assert.NotNull(this.fixture.Window?.SelectedItems);
-            Assert.Empty(this.fixture.Window?.SelectedItems);
-            Assert.NotNull(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.FirstListBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.SecondListBox.SelectedItems);
-
-            this.fixture.Window?.FirstListBox.SelectedItems.Add(this.fixture.Window?.Items[0]);
-
-            Assert.Single(this.fixture.Window?.SelectedItems);
-            Assert.Single(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Single(this.fixture.Window?.SecondListBox.SelectedItems);
+            this.window?.Close();
+            this.window = null;
         }
 
-        [Fact]
-        [DisplayTestMethodName]
-        public async void PreSelectedItemsShouldBeSyncedByMultiSelectionHelper()
+        [SetUp]
+        public void SetUp()
         {
-            await this.fixture.PrepareForTestAsync();
-            await TestHost.SwitchToAppThread();
-
-            Assert.NotNull(this.fixture.Window?.SelectedItems);
-            Assert.Empty(this.fixture.Window?.SelectedItems);
-            Assert.NotNull(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.FirstListBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.SecondListBox.SelectedItems);
-
-            this.fixture.Window?.SelectedItems.Add(this.fixture.Window?.Items[0]);
-
-            Assert.Single(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Single(this.fixture.Window?.FirstListBox.SelectedItems);
-            Assert.Single(this.fixture.Window?.SecondListBox.SelectedItems);
+            this.PreparePropertiesForTest();
         }
 
-        [Fact]
-        [DisplayTestMethodName]
-        public async void SelectedItemsShouldBeSyncedAndContainsOnlyOnce()
+        private void PreparePropertiesForTest()
         {
-            await this.fixture.PrepareForTestAsync();
-            await TestHost.SwitchToAppThread();
-
-            Assert.NotNull(this.fixture.Window?.SelectedItems);
-            Assert.Empty(this.fixture.Window?.SelectedItems);
-            Assert.NotNull(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.FirstListBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.SecondListBox.SelectedItems);
-
-            this.fixture.Window?.FirstListBox.SelectedItems.Add(this.fixture.Window?.Items[0]);
-
-            Assert.Single(this.fixture.Window?.SelectedItems);
-            Assert.Single(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Single(this.fixture.Window?.FirstListBox.SelectedItems);
-            Assert.Single(this.fixture.Window?.SecondListBox.SelectedItems);
-
-            this.fixture.Window?.FirstListBox.SelectedItems.Add(this.fixture.Window?.Items[0]);
-
-            Assert.Single(this.fixture.Window?.SelectedItems);
-            Assert.Single(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Single(this.fixture.Window?.FirstListBox.SelectedItems);
-            Assert.Single(this.fixture.Window?.SecondListBox.SelectedItems);
+            this.window?.SelectedItems?.Clear();
+            this.window?.MultiSelectionComboBox?.SelectedItems?.Clear();
+            this.window?.FirstListBox?.SelectedItems?.Clear();
+            this.window?.SecondListBox?.SelectedItems?.Clear();
         }
 
-        [Fact]
-        [DisplayTestMethodName]
-        public async void AddedItemShouldBeSynced()
+        [Test]
+        public void SelectedItemsShouldBeSyncedByMultiSelectionHelper()
         {
-            await this.fixture.PrepareForTestAsync();
-            await TestHost.SwitchToAppThread();
+            Assert.That(this.window, Is.Not.Null);
 
-            Assert.NotNull(this.fixture.Window?.SelectedItems);
-            Assert.Empty(this.fixture.Window?.SelectedItems);
-            Assert.NotNull(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.FirstListBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.SecondListBox.SelectedItems);
+            Assert.That(window.SelectedItems, Is.Not.Null);
+            Assert.That(window.SelectedItems, Is.Empty);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Is.Not.Null);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Is.Empty);
+            Assert.That(window.FirstListBox.SelectedItems, Is.Empty);
+            Assert.That(window.SecondListBox.SelectedItems, Is.Empty);
 
-            this.fixture.Window?.SelectedItems.Add(this.fixture.Window?.Items[0]);
+            window.FirstListBox.SelectedItems.Add(window.Items[0]);
 
-            Assert.Single(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Single(this.fixture.Window?.FirstListBox.SelectedItems);
-            Assert.Single(this.fixture.Window?.SecondListBox.SelectedItems);
-
-            this.fixture.Window?.FirstListBox?.SelectedItems.Add(this.fixture.Window?.Items[1]);
-
-            Assert.Equal(2, this.fixture.Window?.MultiSelectionComboBox.SelectedItems.Count);
-            Assert.Equal(2, this.fixture.Window?.FirstListBox.SelectedItems.Count);
-            Assert.Equal(2, this.fixture.Window?.SecondListBox.SelectedItems.Count);
-
-            this.fixture.Window?.SecondListBox?.SelectedItems.Add(this.fixture.Window?.Items[2]);
-
-            Assert.Equal(3, this.fixture.Window?.MultiSelectionComboBox.SelectedItems.Count);
-            Assert.Equal(3, this.fixture.Window?.FirstListBox.SelectedItems.Count);
-            Assert.Equal(3, this.fixture.Window?.SecondListBox.SelectedItems.Count);
-
-            this.fixture.Window?.MultiSelectionComboBox?.SelectedItems.Add(this.fixture.Window?.Items[3]);
-
-            Assert.Equal(4, this.fixture.Window?.MultiSelectionComboBox.SelectedItems.Count);
-            Assert.Equal(4, this.fixture.Window?.FirstListBox.SelectedItems.Count);
-            Assert.Equal(4, this.fixture.Window?.SecondListBox.SelectedItems.Count);
+            Assert.That(window.SelectedItems, Has.One.Items);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Has.One.Items);
+            Assert.That(window.SecondListBox.SelectedItems, Has.One.Items);
         }
 
-        [Fact]
-        [DisplayTestMethodName]
-        public async void RemovedItemShouldBeSynced()
+        [Test]
+        public void PreSelectedItemsShouldBeSyncedByMultiSelectionHelper()
         {
-            await this.fixture.PrepareForTestAsync();
-            await TestHost.SwitchToAppThread();
+            Assert.That(this.window, Is.Not.Null);
 
-            Assert.NotNull(this.fixture.Window?.SelectedItems);
-            Assert.Empty(this.fixture.Window?.SelectedItems);
-            Assert.NotNull(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.FirstListBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.SecondListBox.SelectedItems);
+            Assert.That(window.SelectedItems, Is.Not.Null);
+            Assert.That(window.SelectedItems, Is.Empty);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Is.Not.Null);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Is.Empty);
+            Assert.That(window.FirstListBox.SelectedItems, Is.Empty);
+            Assert.That(window.SecondListBox.SelectedItems, Is.Empty);
 
-            this.fixture.Window?.SelectedItems.Add(this.fixture.Window?.Items[0]);
+            window.SelectedItems.Add(window.Items[0]);
 
-            Assert.Single(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Single(this.fixture.Window?.FirstListBox.SelectedItems);
-            Assert.Single(this.fixture.Window?.SecondListBox.SelectedItems);
-
-            this.fixture.Window?.SelectedItems.Remove(this.fixture.Window?.Items[0]);
-
-            Assert.Empty(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.FirstListBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.SecondListBox.SelectedItems);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Has.One.Items);
+            Assert.That(window.FirstListBox.SelectedItems, Has.One.Items);
+            Assert.That(window.SecondListBox.SelectedItems, Has.One.Items);
         }
 
-        [Fact]
-        [DisplayTestMethodName]
-        public async void MovedItemShouldBeSynced()
+        [Test]
+        public void SelectedItemsShouldBeSyncedAndContainsOnlyOnce()
         {
-            await this.fixture.PrepareForTestAsync();
-            await TestHost.SwitchToAppThread();
+            Assert.That(this.window, Is.Not.Null);
 
-            Assert.NotNull(this.fixture.Window?.SelectedItems);
-            Assert.Empty(this.fixture.Window?.SelectedItems);
-            Assert.NotNull(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.FirstListBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.SecondListBox.SelectedItems);
+            Assert.That(window.SelectedItems, Is.Not.Null);
+            Assert.That(window.SelectedItems, Is.Empty);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Is.Not.Null);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Is.Empty);
+            Assert.That(window.FirstListBox.SelectedItems, Is.Empty);
+            Assert.That(window.SecondListBox.SelectedItems, Is.Empty);
 
-            this.fixture.Window?.SelectedItems.Add(this.fixture.Window?.Items[0]);
-            this.fixture.Window?.SelectedItems.Add(this.fixture.Window?.Items[1]);
-            this.fixture.Window?.SelectedItems.Add(this.fixture.Window?.Items[2]);
+            window.FirstListBox.SelectedItems.Add(window.Items[0]);
 
-            Assert.Equal(this.fixture.Window?.SelectedItems[0], this.fixture.Window?.MultiSelectionComboBox.SelectedItems[0]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[2], this.fixture.Window?.MultiSelectionComboBox.SelectedItems[2]);
+            Assert.That(window.SelectedItems, Has.One.Items);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Has.One.Items);
+            Assert.That(window.FirstListBox.SelectedItems, Has.One.Items);
+            Assert.That(window.SecondListBox.SelectedItems, Has.One.Items);
 
-            Assert.Equal(this.fixture.Window?.SelectedItems[0], this.fixture.Window?.FirstListBox.SelectedItems[0]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[2], this.fixture.Window?.FirstListBox.SelectedItems[2]);
+            window.FirstListBox.SelectedItems.Add(window.Items[0]);
 
-            Assert.Equal(this.fixture.Window?.SelectedItems[0], this.fixture.Window?.SecondListBox.SelectedItems[0]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[2], this.fixture.Window?.SecondListBox.SelectedItems[2]);
-
-            this.fixture.Window?.SelectedItems.Move(0, 2);
-
-            Assert.Equal(this.fixture.Window?.SelectedItems[0], this.fixture.Window?.MultiSelectionComboBox.SelectedItems[0]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[2], this.fixture.Window?.MultiSelectionComboBox.SelectedItems[2]);
-
-            Assert.Equal(this.fixture.Window?.SelectedItems[0], this.fixture.Window?.FirstListBox.SelectedItems[0]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[2], this.fixture.Window?.FirstListBox.SelectedItems[2]);
-
-            Assert.Equal(this.fixture.Window?.SelectedItems[0], this.fixture.Window?.SecondListBox.SelectedItems[0]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[2], this.fixture.Window?.SecondListBox.SelectedItems[2]);
+            Assert.That(window.SelectedItems, Has.One.Items);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Has.One.Items);
+            Assert.That(window.FirstListBox.SelectedItems, Has.One.Items);
+            Assert.That(window.SecondListBox.SelectedItems, Has.One.Items);
         }
 
-        [Fact]
-        [DisplayTestMethodName]
-        public async void ReplacedItemShouldBeSynced()
+        [Test]
+        public void AddedItemShouldBeSynced()
         {
-            await this.fixture.PrepareForTestAsync();
-            await TestHost.SwitchToAppThread();
+            Assert.That(this.window, Is.Not.Null);
 
-            Assert.NotNull(this.fixture.Window?.SelectedItems);
-            Assert.Empty(this.fixture.Window?.SelectedItems);
-            Assert.NotNull(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.FirstListBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.SecondListBox.SelectedItems);
+            Assert.That(window.SelectedItems, Is.Not.Null);
+            Assert.That(window.SelectedItems, Is.Empty);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Is.Not.Null);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Is.Empty);
+            Assert.That(window.FirstListBox.SelectedItems, Is.Empty);
+            Assert.That(window.SecondListBox.SelectedItems, Is.Empty);
 
-            this.fixture.Window?.SelectedItems.Add(this.fixture.Window?.Items[0]);
-            this.fixture.Window?.SelectedItems.Add(this.fixture.Window?.Items[1]);
-            this.fixture.Window?.SelectedItems.Add(this.fixture.Window?.Items[2]);
+            window.SelectedItems.Add(window.Items[0]);
 
-            Assert.Equal(this.fixture.Window?.SelectedItems[0], this.fixture.Window?.MultiSelectionComboBox.SelectedItems[0]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[1], this.fixture.Window?.MultiSelectionComboBox.SelectedItems[1]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[2], this.fixture.Window?.MultiSelectionComboBox.SelectedItems[2]);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Has.One.Items);
+            Assert.That(window.FirstListBox.SelectedItems, Has.One.Items);
+            Assert.That(window.SecondListBox.SelectedItems, Has.One.Items);
 
-            Assert.Equal(this.fixture.Window?.SelectedItems[0], this.fixture.Window?.FirstListBox.SelectedItems[0]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[1], this.fixture.Window?.FirstListBox.SelectedItems[1]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[2], this.fixture.Window?.FirstListBox.SelectedItems[2]);
+            window.FirstListBox.SelectedItems.Add(window.Items[1]);
 
-            Assert.Equal(this.fixture.Window?.SelectedItems[0], this.fixture.Window?.SecondListBox.SelectedItems[0]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[1], this.fixture.Window?.SecondListBox.SelectedItems[1]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[2], this.fixture.Window?.SecondListBox.SelectedItems[2]);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Has.Count.EqualTo(2));
+            Assert.That(window.FirstListBox.SelectedItems, Has.Count.EqualTo(2));
+            Assert.That(window.SecondListBox.SelectedItems, Has.Count.EqualTo(2));
 
-            this.fixture.Window.SelectedItems[0] = this.fixture.Window?.Items[3];
-            this.fixture.Window.SelectedItems[2] = this.fixture.Window?.Items[4];
+            window.SecondListBox.SelectedItems.Add(window.Items[2]);
 
-            Assert.Equal(this.fixture.Window?.SelectedItems[0], this.fixture.Window?.MultiSelectionComboBox.SelectedItems[0]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[1], this.fixture.Window?.MultiSelectionComboBox.SelectedItems[1]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[2], this.fixture.Window?.MultiSelectionComboBox.SelectedItems[2]);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Has.Count.EqualTo(3));
+            Assert.That(window.FirstListBox.SelectedItems, Has.Count.EqualTo(3));
+            Assert.That(window.SecondListBox.SelectedItems, Has.Count.EqualTo(3));
 
-            Assert.Equal(this.fixture.Window?.SelectedItems[0], this.fixture.Window?.FirstListBox.SelectedItems[0]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[1], this.fixture.Window?.FirstListBox.SelectedItems[1]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[2], this.fixture.Window?.FirstListBox.SelectedItems[2]);
+            window.MultiSelectionComboBox.SelectedItems.Add(window.Items[3]);
 
-            Assert.Equal(this.fixture.Window?.SelectedItems[0], this.fixture.Window?.SecondListBox.SelectedItems[0]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[1], this.fixture.Window?.SecondListBox.SelectedItems[1]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[2], this.fixture.Window?.SecondListBox.SelectedItems[2]);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Has.Count.EqualTo(4));
+            Assert.That(window.FirstListBox.SelectedItems, Has.Count.EqualTo(4));
+            Assert.That(window.SecondListBox.SelectedItems, Has.Count.EqualTo(4));
         }
 
-        [Fact]
-        [DisplayTestMethodName]
-        public async void ClearedItemShouldBeSynced()
+        [Test]
+        public void RemovedItemShouldBeSynced()
         {
-            await this.fixture.PrepareForTestAsync();
-            await TestHost.SwitchToAppThread();
+            Assert.That(this.window, Is.Not.Null);
 
-            Assert.NotNull(this.fixture.Window?.SelectedItems);
-            Assert.Empty(this.fixture.Window?.SelectedItems);
-            Assert.NotNull(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.FirstListBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.SecondListBox.SelectedItems);
+            Assert.That(window.SelectedItems, Is.Not.Null);
+            Assert.That(window.SelectedItems, Is.Empty);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Is.Not.Null);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Is.Empty);
+            Assert.That(window.FirstListBox.SelectedItems, Is.Empty);
+            Assert.That(window.SecondListBox.SelectedItems, Is.Empty);
 
-            this.fixture.Window?.SelectedItems.Add(this.fixture.Window?.Items[0]);
-            this.fixture.Window?.SelectedItems.Add(this.fixture.Window?.Items[1]);
-            this.fixture.Window?.SelectedItems.Add(this.fixture.Window?.Items[2]);
+            window.SelectedItems.Add(window.Items[0]);
 
-            Assert.Equal(this.fixture.Window?.SelectedItems[0], this.fixture.Window?.MultiSelectionComboBox.SelectedItems[0]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[1], this.fixture.Window?.MultiSelectionComboBox.SelectedItems[1]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[2], this.fixture.Window?.MultiSelectionComboBox.SelectedItems[2]);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Has.One.Items);
+            Assert.That(window.FirstListBox.SelectedItems, Has.One.Items);
+            Assert.That(window.SecondListBox.SelectedItems, Has.One.Items);
 
-            Assert.Equal(this.fixture.Window?.SelectedItems[0], this.fixture.Window?.FirstListBox.SelectedItems[0]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[1], this.fixture.Window?.FirstListBox.SelectedItems[1]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[2], this.fixture.Window?.FirstListBox.SelectedItems[2]);
+            window.SelectedItems.Remove(window.Items[0]);
 
-            Assert.Equal(this.fixture.Window?.SelectedItems[0], this.fixture.Window?.SecondListBox.SelectedItems[0]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[1], this.fixture.Window?.SecondListBox.SelectedItems[1]);
-            Assert.Equal(this.fixture.Window?.SelectedItems[2], this.fixture.Window?.SecondListBox.SelectedItems[2]);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Is.Empty);
+            Assert.That(window.FirstListBox.SelectedItems, Is.Empty);
+            Assert.That(window.SecondListBox.SelectedItems, Is.Empty);
 
-            this.fixture.Window?.SelectedItems.Clear();
+            window.SelectedItems.Add(window.Items[0]);
 
-            Assert.Empty(this.fixture.Window?.MultiSelectionComboBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.FirstListBox.SelectedItems);
-            Assert.Empty(this.fixture.Window?.SecondListBox.SelectedItems);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Has.One.Items);
+            Assert.That(window.FirstListBox.SelectedItems, Has.One.Items);
+            Assert.That(window.SecondListBox.SelectedItems, Has.One.Items);
+
+            window.MultiSelectionComboBox.SelectedItems.RemoveAt(0);
+
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Is.Empty);
+            Assert.That(window.FirstListBox.SelectedItems, Is.Empty);
+            Assert.That(window.SecondListBox.SelectedItems, Is.Empty);
+        }
+
+        [Test]
+        public void MovedItemShouldBeSynced()
+        {
+            Assert.That(this.window, Is.Not.Null);
+
+            Assert.That(window.SelectedItems, Is.Not.Null);
+            Assert.That(window.SelectedItems, Is.Empty);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Is.Not.Null);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Is.Empty);
+            Assert.That(window.FirstListBox.SelectedItems, Is.Empty);
+            Assert.That(window.SecondListBox.SelectedItems, Is.Empty);
+
+            window.SelectedItems.Add(window.Items[0]);
+            window.SelectedItems.Add(window.Items[1]);
+            window.SelectedItems.Add(window.Items[2]);
+
+            Assert.That(window.MultiSelectionComboBox.SelectedItems[0], Is.EqualTo(window.SelectedItems[0]));
+            Assert.That(window.MultiSelectionComboBox.SelectedItems[2], Is.EqualTo(window.SelectedItems[2]));
+
+            Assert.That(window.FirstListBox.SelectedItems[0], Is.EqualTo(window.SelectedItems[0]));
+            Assert.That(window.FirstListBox.SelectedItems[2], Is.EqualTo(window.SelectedItems[2]));
+
+            Assert.That(window.SecondListBox.SelectedItems[0], Is.EqualTo(window.SelectedItems[0]));
+            Assert.That(window.SecondListBox.SelectedItems[2], Is.EqualTo(window.SelectedItems[2]));
+
+            window.SelectedItems.Move(0, 2);
+
+            Assert.That(window.MultiSelectionComboBox.SelectedItems[0], Is.EqualTo(window.SelectedItems[0]));
+            Assert.That(window.MultiSelectionComboBox.SelectedItems[2], Is.EqualTo(window.SelectedItems[2]));
+
+            Assert.That(window.FirstListBox.SelectedItems[0], Is.EqualTo(window.SelectedItems[0]));
+            Assert.That(window.FirstListBox.SelectedItems[2], Is.EqualTo(window.SelectedItems[2]));
+
+            Assert.That(window.SecondListBox.SelectedItems[0], Is.EqualTo(window.SelectedItems[0]));
+            Assert.That(window.SecondListBox.SelectedItems[2], Is.EqualTo(window.SelectedItems[2]));
+        }
+
+        [Test]
+        public void ReplacedItemShouldBeSynced()
+        {
+            Assert.That(this.window, Is.Not.Null);
+
+            Assert.That(window.SelectedItems, Is.Not.Null);
+            Assert.That(window.SelectedItems, Is.Empty);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Is.Not.Null);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Is.Empty);
+            Assert.That(window.FirstListBox.SelectedItems, Is.Empty);
+            Assert.That(window.SecondListBox.SelectedItems, Is.Empty);
+
+            window.SelectedItems.Add(window.Items[0]);
+            window.SelectedItems.Add(window.Items[1]);
+            window.SelectedItems.Add(window.Items[2]);
+
+            Assert.That(window.MultiSelectionComboBox.SelectedItems[0], Is.EqualTo(window.SelectedItems[0]));
+            Assert.That(window.MultiSelectionComboBox.SelectedItems[1], Is.EqualTo(window.SelectedItems[1]));
+            Assert.That(window.MultiSelectionComboBox.SelectedItems[2], Is.EqualTo(window.SelectedItems[2]));
+
+            Assert.That(window.FirstListBox.SelectedItems[0], Is.EqualTo(window.SelectedItems[0]));
+            Assert.That(window.FirstListBox.SelectedItems[1], Is.EqualTo(window.SelectedItems[1]));
+            Assert.That(window.FirstListBox.SelectedItems[2], Is.EqualTo(window.SelectedItems[2]));
+
+            Assert.That(window.SecondListBox.SelectedItems[0], Is.EqualTo(window.SelectedItems[0]));
+            Assert.That(window.SecondListBox.SelectedItems[1], Is.EqualTo(window.SelectedItems[1]));
+            Assert.That(window.SecondListBox.SelectedItems[2], Is.EqualTo(window.SelectedItems[2]));
+
+            window.SelectedItems[0] = window.Items[3];
+            window.SelectedItems[2] = window.Items[4];
+
+            Assert.That(window.MultiSelectionComboBox.SelectedItems[0], Is.EqualTo(window.SelectedItems[0]));
+            Assert.That(window.MultiSelectionComboBox.SelectedItems[1], Is.EqualTo(window.SelectedItems[1]));
+            Assert.That(window.MultiSelectionComboBox.SelectedItems[2], Is.EqualTo(window.SelectedItems[2]));
+
+            Assert.That(window.FirstListBox.SelectedItems[0], Is.EqualTo(window.SelectedItems[0]));
+            Assert.That(window.FirstListBox.SelectedItems[1], Is.EqualTo(window.SelectedItems[1]));
+            Assert.That(window.FirstListBox.SelectedItems[2], Is.EqualTo(window.SelectedItems[2]));
+
+            Assert.That(window.SecondListBox.SelectedItems[0], Is.EqualTo(window.SelectedItems[0]));
+            Assert.That(window.SecondListBox.SelectedItems[1], Is.EqualTo(window.SelectedItems[1]));
+            Assert.That(window.SecondListBox.SelectedItems[2], Is.EqualTo(window.SelectedItems[2]));
+        }
+
+        [Test]
+        public void ClearedItemShouldBeSynced()
+        {
+            Assert.That(this.window, Is.Not.Null);
+
+            Assert.That(window.SelectedItems, Is.Not.Null);
+            Assert.That(window.SelectedItems, Is.Empty);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Is.Not.Null);
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Is.Empty);
+            Assert.That(window.FirstListBox.SelectedItems, Is.Empty);
+            Assert.That(window.SecondListBox.SelectedItems, Is.Empty);
+
+            window.SelectedItems.Add(window.Items[0]);
+            window.SelectedItems.Add(window.Items[1]);
+            window.SelectedItems.Add(window.Items[2]);
+
+            Assert.That(window.MultiSelectionComboBox.SelectedItems[0], Is.EqualTo(window.SelectedItems[0]));
+            Assert.That(window.MultiSelectionComboBox.SelectedItems[1], Is.EqualTo(window.SelectedItems[1]));
+            Assert.That(window.MultiSelectionComboBox.SelectedItems[2], Is.EqualTo(window.SelectedItems[2]));
+
+            Assert.That(window.FirstListBox.SelectedItems[0], Is.EqualTo(window.SelectedItems[0]));
+            Assert.That(window.FirstListBox.SelectedItems[1], Is.EqualTo(window.SelectedItems[1]));
+            Assert.That(window.FirstListBox.SelectedItems[2], Is.EqualTo(window.SelectedItems[2]));
+
+            Assert.That(window.SecondListBox.SelectedItems[0], Is.EqualTo(window.SelectedItems[0]));
+            Assert.That(window.SecondListBox.SelectedItems[1], Is.EqualTo(window.SelectedItems[1]));
+            Assert.That(window.SecondListBox.SelectedItems[2], Is.EqualTo(window.SelectedItems[2]));
+
+            window.SelectedItems.Clear();
+
+            Assert.That(window.MultiSelectionComboBox.SelectedItems, Is.Empty);
+            Assert.That(window.FirstListBox.SelectedItems, Is.Empty);
+            Assert.That(window.SecondListBox.SelectedItems, Is.Empty);
         }
     }
 }

@@ -114,6 +114,14 @@
                     <x:Type TypeName="controlzEx:WindowCornerPreference" />
                 </ObjectDataProvider.MethodParameters>
             </ObjectDataProvider>
+
+            <ObjectDataProvider x:Key="WindowBackdropTypeEnumValues"
+                                MethodName="GetValues"
+                                ObjectType="{x:Type controlzEx:WindowBackdropType}">
+                <ObjectDataProvider.MethodParameters>
+                    <x:Type TypeName="controlzEx:WindowBackdropType" />
+                </ObjectDataProvider.MethodParameters>
+            </ObjectDataProvider>
         </ResourceDictionary>
     </Window.Resources>
 
@@ -238,6 +246,18 @@
                             </ControlTemplate>
                         </MenuItem.Template>
                     </MenuItem>
+                    <MenuItem>
+                        <MenuItem.Template>
+                            <ControlTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Label Content="Backdrop" />
+                                    <ComboBox VerticalAlignment="Center"
+                                              ItemsSource="{Binding Source={StaticResource WindowBackdropTypeEnumValues}}"
+                                              SelectedItem="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type mah:MetroWindow}}, Path=(controlzEx:WindowBackdropManager.BackdropType), Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                </StackPanel>
+                            </ControlTemplate>
+                        </MenuItem.Template>
+                    </MenuItem>
                 </MenuItem>
                 <MenuItem Header="Glow">
                     <MenuItem Header="PreferDWMBorderColor"
@@ -265,9 +285,8 @@
                           IsChecked="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type mah:MetroWindow}}, Path=ToggleFullScreen}" />
                 <Separator />
                 <MenuItem Click="MenuWindowWithGlowOnClick" Header="Window with Glow" />
-                <MenuItem Click="MenuWindowWithoutGlowOnClick" Header="Window without Glow" />
-                <MenuItem Click="MenuWindowWithBorderOnClick" Header="Window with Border (and Glow)" />
-                <MenuItem Click="MenuWindowWithRoundedBorderOnClick" Header="Window with rounded Border (without Glow)" />
+                <MenuItem Click="MenuWindowWithBorderOnClick" Header="Window with Glow and Border" />
+                <MenuItem Click="MenuWindowWithRoundedBorderOnClick" Header="Window without Glow but with rounded Border" />
                 <MenuItem Click="LaunchSizeToContentDemo" Header="Window with SizeToContent" />
                 <Separator />
                 <MenuItem x:Name="ShowSeparatorsMI"

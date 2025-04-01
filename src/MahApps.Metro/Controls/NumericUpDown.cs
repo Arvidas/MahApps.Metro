@@ -16,6 +16,8 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using JetBrains.Annotations;
 using MahApps.Metro.ValueBoxes;
+using MahApps.Metro.Automation.Peers;
+using System.Windows.Automation.Peers;
 
 namespace MahApps.Metro.Controls
 {
@@ -305,7 +307,7 @@ namespace MahApps.Metro.Controls
                                           new FrameworkPropertyMetadata(BooleanBoxes.TrueBox));
 
         /// <summary>
-        /// Gets or sets a value indicating whether the user can use the arrow keys <see cref="Key.Up"/> and <see cref="Key.Down"/> to change the value. 
+        /// Gets or sets a value indicating whether the user can use the arrow keys <see cref="Key.Up"/> and <see cref="Key.Down"/> to change the value.
         /// </summary>
         [Bindable(true)]
         [Category("Behavior")]
@@ -371,7 +373,7 @@ namespace MahApps.Metro.Controls
                                           new FrameworkPropertyMetadata(default(double?),
                                                                         FrameworkPropertyMetadataOptions.BindsTwoWayByDefault,
                                                                         OnValuePropertyChanged,
-                                                                        (o, value) => CoerceValue(o, value).Item1));
+                                                                        (o, value) => CoerceValue(o, value).value));
 
         private static void OnValuePropertyChanged(DependencyObject dependencyObject, DependencyPropertyChangedEventArgs e)
         {
@@ -382,12 +384,12 @@ namespace MahApps.Metro.Controls
         }
 
         [MustUseReturnValue]
-        private static Tuple<double?, bool> CoerceValue(DependencyObject d, object? baseValue)
+        private static (double? value, bool isValid) CoerceValue(DependencyObject d, object? baseValue)
         {
             var numericUpDown = (NumericUpDown)d;
             if (baseValue is null)
             {
-                return new Tuple<double?, bool>(numericUpDown.DefaultValue, false);
+                return (numericUpDown.DefaultValue, false);
             }
 
             var value = ((double?)baseValue).Value;
@@ -399,15 +401,15 @@ namespace MahApps.Metro.Controls
 
             if (value < numericUpDown.Minimum)
             {
-                return new Tuple<double?, bool>(numericUpDown.Minimum, true);
+                return (numericUpDown.Minimum, false);
             }
 
             if (value > numericUpDown.Maximum)
             {
-                return new Tuple<double?, bool>(numericUpDown.Maximum, true);
+                return (numericUpDown.Maximum, false);
             }
 
-            return new Tuple<double?, bool>(value, false);
+            return (value, true);
         }
 
         /// <summary>
@@ -755,7 +757,7 @@ namespace MahApps.Metro.Controls
         /// <summary>
         /// Gets or sets a composite string that specifies how to format the ButtonUpContent property if it is displayed as a string.
         /// </summary>
-        /// <remarks> 
+        /// <remarks>
         /// This property is ignored if <seealso cref="ButtonUpContentTemplate"/> is set.
         /// </remarks>
         [Bindable(true)]
@@ -809,7 +811,7 @@ namespace MahApps.Metro.Controls
         /// <summary>
         /// Gets or sets a composite string that specifies how to format the ButtonDownContent property if it is displayed as a string.
         /// </summary>
-        /// <remarks> 
+        /// <remarks>
         /// This property is ignored if <seealso cref="ButtonDownContentTemplate"/> is set.
         /// </remarks>
         [Bindable(true)]
@@ -958,7 +960,7 @@ namespace MahApps.Metro.Controls
             EventManager.RegisterClassHandler(typeof(NumericUpDown), GotFocusEvent, new RoutedEventHandler(OnGotFocus));
         }
 
-        /// <summary> 
+        /// <summary>
         ///     Called when this element or any below gets focus.
         /// </summary>
         private static void OnGotFocus(object sender, RoutedEventArgs e)
@@ -1017,6 +1019,14 @@ namespace MahApps.Metro.Controls
             this.OnValueChanged(this.Value, this.Value);
 
             this.scrollViewer = null;
+        }
+
+        /// <summary>
+        /// Creates AutomationPeer (<see cref="UIElement.OnCreateAutomationPeer"/>)
+        /// </summary>
+        protected override AutomationPeer OnCreateAutomationPeer()
+        {
+            return new NumericUpdDownAutomationPeer(this);
         }
 
         private void ToggleReadOnlyMode(bool isReadOnly)
@@ -1161,7 +1171,8 @@ namespace MahApps.Metro.Controls
             var fullText = textBox.Text.Remove(textBox.SelectionStart, textBox.SelectionLength).Insert(textBox.CaretIndex, e.Text);
             var textIsValid = this.ValidateText(fullText, out var convertedValue);
             // Value must be valid and not coerced
-            e.Handled = !textIsValid || CoerceValue(this, convertedValue as double?).Item2;
+            var coerceValue = CoerceValue(this, convertedValue as double?);
+            e.Handled = !textIsValid || !coerceValue.isValid;
             this.manualChange = !e.Handled;
         }
 
@@ -1185,6 +1196,8 @@ namespace MahApps.Metro.Controls
                         this.valueTextBox.Text = null;
                     }
 
+                    this.EnableDisableUpDown();
+
                     if (oldValue != newValue)
                     {
                         this.RaiseEvent(new RoutedPropertyChangedEventArgs<double?>(oldValue, newValue, ValueChangedEvent));
@@ -1193,22 +1206,12 @@ namespace MahApps.Metro.Controls
                     return;
                 }
 
-                if (this.repeatUp != null && !this.repeatUp.IsEnabled)
-                {
-                    this.repeatUp.IsEnabled = true;
-                }
-
-                if (this.repeatDown != null && !this.repeatDown.IsEnabled)
-                {
-                    this.repeatDown.IsEnabled = true;
-                }
+                this.repeatUp?.SetCurrentValue(RepeatButton.IsEnabledProperty, BooleanBoxes.TrueBox);
+                this.repeatDown?.SetCurrentValue(RepeatButton.IsEnabledProperty, BooleanBoxes.TrueBox);
 
                 if (newValue <= this.Minimum)
                 {
-                    if (this.repeatDown != null)
-                    {
-                        this.repeatDown.IsEnabled = false;
-                    }
+                    this.repeatDown?.SetCurrentValue(RepeatButton.IsEnabledProperty, BooleanBoxes.FalseBox);
 
                     this.ResetInternal();
 
@@ -1220,12 +1223,10 @@ namespace MahApps.Metro.Controls
 
                 if (newValue >= this.Maximum)
                 {
-                    if (this.repeatUp != null)
-                    {
-                        this.repeatUp.IsEnabled = false;
-                    }
+                    this.repeatUp?.SetCurrentValue(RepeatButton.IsEnabledProperty, BooleanBoxes.FalseBox);
 
                     this.ResetInternal();
+
                     if (this.IsLoaded)
                     {
                         this.RaiseEvent(new RoutedEventArgs(MaximumReachedEvent));
@@ -1237,6 +1238,8 @@ namespace MahApps.Metro.Controls
                     this.InternalSetText(newValue);
                 }
             }
+
+            this.EnableDisableUpDown();
 
             if (oldValue != newValue)
             {
@@ -1447,29 +1450,13 @@ namespace MahApps.Metro.Controls
                 value = this.Minimum;
             }
 
-            this.SetCurrentValue(ValueProperty, CoerceValue(this, value).Item1);
-        }
-
-        private void EnableDisableDown()
-        {
-            if (this.repeatDown != null)
-            {
-                this.repeatDown.IsEnabled = this.Value is null || this.Value > this.Minimum;
-            }
-        }
-
-        private void EnableDisableUp()
-        {
-            if (this.repeatUp != null)
-            {
-                this.repeatUp.IsEnabled = this.Value is null || this.Value < this.Maximum;
-            }
+            this.SetCurrentValue(ValueProperty, CoerceValue(this, value).value);
         }
 
         private void EnableDisableUpDown()
         {
-            this.EnableDisableUp();
-            this.EnableDisableDown();
+            this.repeatUp?.SetCurrentValue(RepeatButton.IsEnabledProperty, BooleanBoxes.Box(this.Value is null || this.Value < this.Maximum));
+            this.repeatDown?.SetCurrentValue(RepeatButton.IsEnabledProperty, BooleanBoxes.Box(this.Value is null || this.Value > this.Minimum));
         }
 
         private void OnTextBoxKeyDown(object sender, KeyEventArgs e)
@@ -1568,6 +1555,8 @@ namespace MahApps.Metro.Controls
                 return;
             }
 
+            var oldValue = this.Value;
+
             if (string.IsNullOrEmpty(text))
             {
                 if (this.DefaultValue.HasValue)
@@ -1593,7 +1582,7 @@ namespace MahApps.Metro.Controls
                 else if (this.DefaultValue.HasValue)
                 {
                     this.SetValueTo(this.DefaultValue.Value);
-                    this.InternalSetText(this.Value);
+                    this.InternalSetText(oldValue);
                 }
                 else
                 {
@@ -1601,7 +1590,7 @@ namespace MahApps.Metro.Controls
                 }
             }
 
-            this.OnValueChanged(this.Value, this.Value);
+            this.OnValueChanged(oldValue, this.Value);
 
             this.manualChange = false;
         }

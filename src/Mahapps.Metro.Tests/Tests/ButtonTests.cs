@@ -2,121 +2,138 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using MahApps.Metro.Controls;
 using MahApps.Metro.Tests.TestHelpers;
-using Xunit;
+using MahApps.Metro.Tests.Views;
+using NUnit.Framework;
 
 namespace MahApps.Metro.Tests.Tests
 {
-    public class ButtonTests : AutomationTestFixtureBase<ButtonTestsFixture>
+    [TestFixture]
+    public class ButtonTests
     {
-        public ButtonTests(ButtonTestsFixture fixture)
-            : base(fixture)
+        private ButtonWindow? window;
+
+        [OneTimeSetUp]
+        public async Task OneTimeSetUp()
         {
+            this.window = await WindowHelpers.CreateInvisibleWindowAsync<ButtonWindow>().ConfigureAwait(false);
         }
 
-        [Fact]
-        [DisplayTestMethodName]
-        public async Task DefaultButtonTextIsUpperCase()
+        [OneTimeTearDown]
+        public void OneTimeTearDown()
         {
-            await TestHost.SwitchToAppThread();
-
-            var presenter = this.fixture.Window?.DefaultButton.FindChild<ContentPresenter>("PART_ContentPresenter");
-
-            Assert.NotNull(presenter);
-
-            Assert.Equal("SOMETEXT", presenter.Content);
+            this.window?.Close();
+            this.window = null;
         }
 
-        [Fact]
-        [DisplayTestMethodName]
-        public async Task DefaultButtonRespectsControlsHelperContentCharacterCasing()
+        [SetUp]
+        public void SetUp()
         {
-            await this.fixture.PrepareForTestAsync(new[] { ControlsHelper.ContentCharacterCasingProperty.Name });
-            await TestHost.SwitchToAppThread();
+            this.PreparePropertiesForTest([
+                ControlsHelper.ContentCharacterCasingProperty.Name,
+                UIElement.IsEnabledProperty.Name
+            ]);
+        }
 
-            Button defaultButton = this.fixture.Window?.DefaultButton;
-            Assert.NotNull(defaultButton);
+        private void PreparePropertiesForTest(IList<string>? properties = null)
+        {
+            this.window?.DefaultButton.ClearDependencyProperties(properties);
+            this.window?.SquareButton.ClearDependencyProperties(properties);
+            this.window?.TheDropDownButton.ClearDependencyProperties(properties);
+            this.window?.TheSplitButton.ClearDependencyProperties(properties);
+        }
+
+        [Test]
+        public void DefaultButtonTextIsUpperCase()
+        {
+            Assert.That(this.window, Is.Not.Null);
+
+            var presenter = this.window.DefaultButton.FindChild<ContentPresenter>("PART_ContentPresenter");
+
+            Assert.That(presenter, Is.Not.Null);
+            Assert.That(presenter.Content, Is.EqualTo("SOMETEXT"));
+        }
+
+        [Test]
+        public void DefaultButtonRespectsControlsHelperContentCharacterCasing()
+        {
+            Assert.That(this.window, Is.Not.Null);
+
+            Button defaultButton = this.window.DefaultButton;
+            Assert.That(defaultButton, Is.Not.Null);
 
             var presenter = defaultButton.FindChild<ContentPresenter>("PART_ContentPresenter");
-            Assert.NotNull(presenter);
+            Assert.That(presenter, Is.Not.Null);
 
             defaultButton.SetValue(ControlsHelper.ContentCharacterCasingProperty, CharacterCasing.Normal);
-            Assert.Equal("SomeText", presenter.Content);
+            Assert.That(presenter.Content, Is.EqualTo("SomeText"));
 
             defaultButton.SetValue(ControlsHelper.ContentCharacterCasingProperty, CharacterCasing.Lower);
-            Assert.Equal("sometext", presenter.Content);
+            Assert.That(presenter.Content, Is.EqualTo("sometext"));
 
             defaultButton.SetValue(ControlsHelper.ContentCharacterCasingProperty, CharacterCasing.Upper);
-            Assert.Equal("SOMETEXT", presenter.Content);
+            Assert.That(presenter.Content, Is.EqualTo("SOMETEXT"));
         }
 
-        [Fact]
-        [DisplayTestMethodName]
-        public async Task SquareButtonButtonTextIsLowerCase()
+        [Test]
+        public void SquareButtonButtonTextIsLowerCase()
         {
-            await TestHost.SwitchToAppThread();
+            Assert.That(this.window, Is.Not.Null);
 
-            var presenter = this.fixture.Window?.SquareButton.FindChild<ContentPresenter>("PART_ContentPresenter");
+            var presenter = this.window.SquareButton.FindChild<ContentPresenter>("PART_ContentPresenter");
 
-            Assert.NotNull(presenter);
-
-            Assert.Equal("sometext", presenter.Content);
+            Assert.That(presenter, Is.Not.Null);
+            Assert.That(presenter.Content, Is.EqualTo("sometext"));
         }
 
-        [Fact]
-        [DisplayTestMethodName]
-        public async Task SquareButtonRespectsButtonHelperContentCharacterCasing()
+        [Test]
+        public void SquareButtonRespectsButtonHelperContentCharacterCasing()
         {
-            await this.fixture.PrepareForTestAsync(new[] { ControlsHelper.ContentCharacterCasingProperty.Name });
-            await TestHost.SwitchToAppThread();
+            Assert.That(this.window, Is.Not.Null);
 
-            Button squareButton = this.fixture.Window?.SquareButton;
-            Assert.NotNull(squareButton);
+            Button squareButton = this.window.SquareButton;
+            Assert.That(squareButton, Is.Not.Null);
 
             var presenter = squareButton.FindChild<ContentPresenter>("PART_ContentPresenter");
-            Assert.NotNull(presenter);
+            Assert.That(presenter, Is.Not.Null);
 
             squareButton.SetValue(ControlsHelper.ContentCharacterCasingProperty, CharacterCasing.Normal);
-            Assert.Equal("SomeText", presenter.Content);
+            Assert.That(presenter.Content, Is.EqualTo("SomeText"));
 
             squareButton.SetValue(ControlsHelper.ContentCharacterCasingProperty, CharacterCasing.Lower);
-            Assert.Equal("sometext", presenter.Content);
+            Assert.That(presenter.Content, Is.EqualTo("sometext"));
 
             squareButton.SetValue(ControlsHelper.ContentCharacterCasingProperty, CharacterCasing.Upper);
-            Assert.Equal("SOMETEXT", presenter.Content);
-            await TestHost.SwitchToAppThread();
+            Assert.That(presenter.Content, Is.EqualTo("SOMETEXT"));
         }
 
-        [Fact]
-        [DisplayTestMethodName]
-        public async Task DropDownButtonShouldRespectParentIsEnabledProperty()
+        [Test]
+        public void DropDownButtonShouldRespectParentIsEnabledProperty()
         {
-            await this.fixture.PrepareForTestAsync(new[] { UIElement.IsEnabledProperty.Name });
-            await TestHost.SwitchToAppThread();
+            Assert.That(this.window, Is.Not.Null);
 
-            this.fixture.Window?.TheStackPanel.SetCurrentValue(UIElement.IsEnabledProperty, false);
-            Assert.False(this.fixture.Window?.TheDropDownButton.IsEnabled);
+            this.window.TheStackPanel.SetCurrentValue(UIElement.IsEnabledProperty, false);
+            Assert.That(this.window.TheDropDownButton.IsEnabled, Is.False);
 
-            this.fixture.Window?.TheStackPanel.SetCurrentValue(UIElement.IsEnabledProperty, true);
-            Assert.True(this.fixture.Window?.TheDropDownButton.IsEnabled);
+            this.window.TheStackPanel.SetCurrentValue(UIElement.IsEnabledProperty, true);
+            Assert.That(this.window.TheDropDownButton.IsEnabled, Is.True);
         }
 
-        [Fact]
-        [DisplayTestMethodName]
-        public async Task SplitButtonShouldRespectParentIsEnabledProperty()
+        [Test]
+        public void SplitButtonShouldRespectParentIsEnabledProperty()
         {
-            await this.fixture.PrepareForTestAsync(new[] { UIElement.IsEnabledProperty.Name });
-            await TestHost.SwitchToAppThread();
+            Assert.That(this.window, Is.Not.Null);
 
-            this.fixture.Window?.TheStackPanel.SetCurrentValue(UIElement.IsEnabledProperty, false);
-            Assert.False(this.fixture.Window?.TheSplitButton.IsEnabled);
+            this.window.TheStackPanel.SetCurrentValue(UIElement.IsEnabledProperty, false);
+            Assert.That(this.window.TheSplitButton.IsEnabled, Is.False);
 
-            this.fixture.Window?.TheStackPanel.SetCurrentValue(UIElement.IsEnabledProperty, true);
-            Assert.True(this.fixture.Window?.TheSplitButton.IsEnabled);
+            this.window.TheStackPanel.SetCurrentValue(UIElement.IsEnabledProperty, true);
+            Assert.That(this.window.TheSplitButton.IsEnabled, Is.True);
         }
     }
 }
