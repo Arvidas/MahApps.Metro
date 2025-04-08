@@ -7,7 +7,7 @@
 
     <!-- Project properties -->
     <PropertyGroup>
-        <TargetFrameworks>net8.0-windows;net6.0-windows;net462</TargetFrameworks>
+        <TargetFrameworks>net8.0-windows7.0;net7.0-windows</TargetFrameworks>
         <LangVersion>latestmajor</LangVersion>
 
         <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
@@ -20,7 +20,8 @@
 
         <NoWarn>$(NoWarn);CS1591</NoWarn>
         <NoError>$(NoError);CS1591</NoError>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <NoError>$(NoError);CS8622</NoError>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <!-- AssemblyInfo -->

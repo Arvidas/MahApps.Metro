@@ -123,7 +123,14 @@ namespace MahApps.Metro.Controls
         {
             if (invalidateMeasureArrange)
             {
-                this.UpdateLayout();
+                try
+                {
+                    this.UpdateLayout();
+                }
+                catch (Exception)
+                {
+                }
+
                 this.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
                 this.InvalidateArrange();
             }

@@ -26,26 +26,22 @@ namespace MahApps.Metro.Native
         /// <param name="id">The id for the caption.</param>
         /// <returns>The caption from the id.</returns>
         public static unsafe string GetCaption(uint id)
-        {
-            if (user32 is null)
-            {
-                user32 = PInvoke.LoadLibrary(Path.Combine(Environment.SystemDirectory, "User32.dll"));
-            }
+		{
+			if (user32 is null)
+			{
+				user32 = PInvoke.LoadLibrary(Path.Combine(Environment.SystemDirectory, "User32.dll"));
+			}
 
-            var chars = new char[256];
+			Span<char> chars = stackalloc char[256];
 
-            fixed (char* pchars = chars)
-            {
-                //PWSTR str = new PWSTR()
-                if (PInvoke.LoadString(user32, id, pchars, chars.Length) == 0)
-                {
-                    return string.Format("String with id '{0}' could not be found.", id);
-                }
+			if (PInvoke.LoadString(user32, id, chars, chars.Length) == 0)
+			{
+				return string.Format("String with id '{0}' could not be found.", id);
+			}
 #pragma warning disable CA1307 // Specify StringComparison for clarity
-                return new string(chars).Replace("&", string.Empty);
+			return new string(chars).Replace("&", string.Empty);
 #pragma warning restore CA1307 // Specify StringComparison for clarity
-            }
-        }
+		}
 
         /// <summary>
         /// Get the working area size of the monitor from where the visual stays.

@@ -256,7 +256,6 @@ namespace MahApps.Metro.Controls
                 // Remove size of border only from child's reference size.
                 var childConstraint = new Size(Math.Max(0.0, constraint.Width - combined.Width),
                                                Math.Max(0.0, constraint.Height - combined.Height));
-
                 child.Measure(childConstraint);
                 var childSize = child.DesiredSize;
 
